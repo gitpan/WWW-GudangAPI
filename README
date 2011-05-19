@@ -1,0 +1,87 @@
+NAME
+    WWW::GudangAPI - Client library for GudangAPI.com
+
+VERSION
+    version 0.01
+
+SYNOPSIS
+     use WWW::GudangAPI qw(call_ga_api);
+     my $res = call_ga_api(
+         module => 'tax/id/npwp',
+         sub    => 'parse_npwp',
+         args   => {npwp=>'00.000.001.8-000'},
+         #https => 1, # use https, default is 0
+     );
+     say "valid!" if $res->[0] == 200; # prints 'valid!'
+
+DESCRIPTION
+    This module is the Perl client library for GudangAPI,
+    <http://www.gudangapi.com/>.
+
+    This module uses Log::Any.
+
+    This module's functions has Sub::Spec specs.
+
+FUNCTIONS
+    None are exported, but they can be.
+
+  call_ga_api(%args) -> [STATUS_CODE, ERR_MSG, RESULT]
+    Call API function from GudangAPI.com.
+
+    This function is actually a thin wrapper for
+    Sub::Spec::HTTP::Client::call_sub_http.
+
+    Returns a 3-element arrayref. STATUS_CODE is 200 on success, or an error
+    code between 3xx-5xx (just like in HTTP). ERR_MSG is a string containing
+    error message, RESULT is the actual result.
+
+    Arguments ("*" denotes required arguments):
+
+    *   args => *hash*
+
+        Function arguments.
+
+    *   https => *bool* (default 0)
+
+        Whether to use HTTPS instead of HTTP.
+
+        You might want to use HTTPS if you send sensitive data such as
+        password or financial data. Note that HTTPS access has higher
+        latency.
+
+    *   log_callback => *code*
+
+        Pass log messages to callback subroutine.
+
+        If log_callback is not provided, log messages will be "rethrown"
+        into Log::Any logging methods (e.g. $log->warn(), $log->debug(),
+        etc).
+
+    *   log_level => *str*
+
+        Value must be one of:
+
+         ["fatal", "error", "warn", "info", "debug", "trace"]
+
+        Request logging output from server.
+
+    *   module* => *str*
+
+        Name of module to call.
+
+    *   sub* => *str*
+
+        Name of function to call.
+
+SEE ALSO
+    Sub::Spec::HTTP::Client
+
+AUTHOR
+    Steven Haryanto <stevenharyanto@gmail.com>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2011 by Steven Haryanto.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
+
