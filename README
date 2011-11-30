@@ -2,34 +2,42 @@ NAME
     WWW::GudangAPI - Client library for GudangAPI.com
 
 VERSION
-    version 0.01
+    version 0.02
 
 SYNOPSIS
-     use WWW::GudangAPI qw(call_ga_api);
-     my $res = call_ga_api(
+     use WWW::GudangAPI qw(get_ga_ssuri);
+     my $uri = get_ga_ssuri(
          module => 'tax/id/npwp',
          sub    => 'parse_npwp',
-         args   => {npwp=>'00.000.001.8-000'},
          #https => 1, # use https, default is 0
      );
+     my $res = $uri->call(npwp=>'00.000.001.8-000');
      say "valid!" if $res->[0] == 200; # prints 'valid!'
 
 DESCRIPTION
     This module is the Perl client library for GudangAPI,
-    <http://www.gudangapi.com/>.
+    <http://www.gudangapi.com/>. It is currently a very thin wrapper for
+    Sub::Spec::URI, since GudangAPI is Sub::Spec::HTTP-compliant. As a
+    matter of fact, you can just do:
+
+     my $uri = Sub::Spec::URI->new("http://gudangapi.com/ga/MODULE::FUNC");
+     my $res = $uri->call(ARG=>..., ...);
+
+    and skip this module altogether. But in the future some convenience
+    features will be added to this module.
 
     This module uses Log::Any.
 
     This module's functions has Sub::Spec specs.
 
 FUNCTIONS
-    None are exported, but they can be.
+    None are exported, but they are exportable.
 
-  call_ga_api(%args) -> [STATUS_CODE, ERR_MSG, RESULT]
-    Call API function from GudangAPI.com.
+  get_ga_ssuri(%args) -> [STATUS_CODE, ERR_MSG, RESULT]
+    Create Sub::Spec::URI object to access GudangAPI.com API functions.
 
-    This function is actually a thin wrapper for
-    Sub::Spec::HTTP::Client::call_sub_http.
+    Once a Sub::Spec::URI object is created, you can call function, get
+    function spec, etc. See Sub::Spec::URI documentation for more details.
 
     Returns a 3-element arrayref. STATUS_CODE is 200 on success, or an error
     code between 3xx-5xx (just like in HTTP). ERR_MSG is a string containing
@@ -37,9 +45,13 @@ FUNCTIONS
 
     Arguments ("*" denotes required arguments):
 
-    *   args => *hash*
+    *   module* => *str*
 
-        Function arguments.
+        Name of module to call.
+
+    *   sub => *str*
+
+        Name of function to call.
 
     *   https => *bool* (default 0)
 
@@ -49,32 +61,16 @@ FUNCTIONS
         password or financial data. Note that HTTPS access has higher
         latency.
 
-    *   log_callback => *code*
+    *   user => *str* (default "ga")
 
-        Pass log messages to callback subroutine.
-
-        If log_callback is not provided, log messages will be "rethrown"
-        into Log::Any logging methods (e.g. $log->warn(), $log->debug(),
-        etc).
-
-    *   log_level => *str*
-
-        Value must be one of:
-
-         ["fatal", "error", "warn", "info", "debug", "trace"]
-
-        Request logging output from server.
-
-    *   module* => *str*
-
-        Name of module to call.
-
-    *   sub* => *str*
-
-        Name of function to call.
+        GudangAPI username.
 
 SEE ALSO
-    Sub::Spec::HTTP::Client
+    Sub::Spec::HTTP
+
+    Sub::Spec::URI
+
+    http://www.gudangapi.com/
 
 AUTHOR
     Steven Haryanto <stevenharyanto@gmail.com>

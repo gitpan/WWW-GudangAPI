@@ -17,14 +17,15 @@ my %module_build_args = (
     'Steven Haryanto <stevenharyanto@gmail.com>'
   ],
   'dist_name' => 'WWW-GudangAPI',
-  'dist_version' => '0.01',
+  'dist_version' => '0.02',
   'license' => 'perl',
   'module_name' => 'WWW::GudangAPI',
   'recommends' => {},
   'recursive_test_files' => 1,
   'requires' => {
+    'Exporter::Lite' => '0',
     'Log::Any' => '0',
-    'Sub::Spec::HTTP::Client' => '0',
+    'Sub::Spec::URI::http' => '0',
     'Test::More' => '0.96',
     'perl' => '5.010000'
   },
