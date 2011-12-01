@@ -9,6 +9,7 @@ use Sub::Spec::URI;
 
 our @EXPORT_OK = qw(get_ga_ssuri);
 our %SPEC;
+our $VERSION = '0.03'; # VERSION
 
 $SPEC{get_ga_ssuri} = {
     summary =>
@@ -92,7 +93,7 @@ WWW::GudangAPI - Client library for GudangAPI.com
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 
