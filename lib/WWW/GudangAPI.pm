@@ -5,37 +5,55 @@ use strict;
 use warnings;
 use Exporter::Lite;
 use Log::Any '$log';
-use Sub::Spec::URI;
+use Perinci::Access;
 
 our @EXPORT_OK = qw(get_ga_ssuri);
 our %SPEC;
-our $VERSION = '0.03'; # VERSION
+our $VERSION = '0.04'; # VERSION
 
-$SPEC{get_ga_ssuri} = {
+$SPEC{call_ga} = {
+    v => 1.1,
     summary =>
-        'Create Sub::Spec::URI object to access GudangAPI.com API functions',
+        'Call GudangAPI.com API functions',
     description => <<'_',
 
-Once a Sub::Spec::URI object is created, you can call function, get function
-spec, etc. See Sub::Spec::URI documentation for more details.
+Note that GudangAPI.com is a Riap server, so you can use any Riap client to
+access it.
 
 _
     args => {
-        module => ['str*' => {
+        module => {
+            req => 1,
+            pos => 0,
+            schema => ['str*' => {
+                match   => qr!^\w+(?:::\w+)*$!,
+            }],
             summary => 'Name of module to call',
-            match   => qr!^\w+(?:::\w+)*$!,
-            arg_pos => 0,
-        }],
-        sub => ['str' => {
+        },
+        func => {
+            req => 1,
+            pos => 1,
+            schema => ['str*' => {
+                match   => qr/^\w+$/,
+            }],
             summary => 'Name of function to call',
-            match   => qr/^\w+$/,
-            arg_pos => 1,
-        }],
-        user => ['str' => {
+        },
+        user => {
+            schema => ['str' => {
+                default => 'ga',
+            }],
             summary => 'GudangAPI username',
-            default => 'ga',
-        }],
-        https => ['bool' => {
+        },
+        args => {
+            schema => ['hash*' => {
+                default => {},
+            }],
+            summary => 'Function arguments',
+        },
+        https => {
+            schema => ['bool' => {
+                default => 0,
+            }],
             summary => 'Whether to use HTTPS instead of HTTP',
             description => <<'_',
 
@@ -43,12 +61,13 @@ You might want to use HTTPS if you send sensitive data such as password or
 financial data. Note that HTTPS access has higher latency.
 
 _
-            default => 0,
-        }],
+        },
     },
 };
-sub get_ga_ssuri {
+sub call_ga {
     my %args = @_;
+
+    state $pa = Perinci::Access->new;
 
     # XXX schema
 
@@ -64,9 +83,9 @@ sub get_ga_ssuri {
     $module =~ m!\A\w+(?:::\w+)*\z!
         or return [400, "Invalid module `$module`: use 'foo::bar' syntax"];
 
-    my $sub = $args{sub};
-    if (defined $sub) {
-        $sub =~ /\A\w+\z/
+    my $func = $args{func};
+    if (defined $func) {
+        $func =~ /\A\w+\z/
             or return [400, "Invalid sub: use alphanums only"];
     }
     my $https = $args{https};
@@ -76,10 +95,10 @@ sub get_ga_ssuri {
                    "gudangapi.com/",
                    $user,
                    "/$module",
-                   (defined($sub) ? "::$sub" : "")
+                   (defined($func) ? "::$func" : "")
                );
     $log->tracef("url=%s", $url);
-    Sub::Spec::URI->new($url);
+    $pa->request(call => $url, {args=>});
 }
 
 1;
@@ -89,19 +108,20 @@ sub get_ga_ssuri {
 
 =head1 NAME
 
-WWW::GudangAPI - Client library for GudangAPI.com
+WWW::GudangAPI
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 SYNOPSIS
 
- use WWW::GudangAPI qw(get_ga_ssuri);
- my $uri = get_ga_ssuri(
+ use WWW::GudangAPI qw(call_ga);
+ my $uri = call_ga(
      module => 'tax/id/npwp',
-     sub    => 'parse_npwp',
+     func   => 'parse_npwp',
      #https => 1, # use https, default is 0
+     args => {npwp=>'00.000.001.8-000'}
  );
  my $res = $uri->call(npwp=>'00.000.001.8-000');
  say "valid!" if $res->[0] == 200; # prints 'valid!'
@@ -109,66 +129,26 @@ version 0.03
 =head1 DESCRIPTION
 
 This module is the Perl client library for GudangAPI,
-L<http://www.gudangapi.com/>. It is currently a very thin wrapper for
-L<Sub::Spec::URI>, since GudangAPI is L<Sub::Spec::HTTP>-compliant. As a matter
-of fact, you can just do:
+L<http://www.gudangapi.com/>. It is currently a very thin (and probably pretty
+useless) wrapper for L<Perinci::Access>, since GudangAPI is L<Riap>-compliant.
+As a matter of fact, you can just do:
 
- my $uri = Sub::Spec::URI->new("http://gudangapi.com/ga/MODULE::FUNC");
- my $res = $uri->call(ARG=>..., ...);
+ my $pa = Perinci::Access->new;
+ my $res = $pa->request(call => "http://gudangapi.com/ga/MODULE::FUNC",
+                        {args=>{ARG=>...}});
 
 and skip this module altogether. But in the future some convenience features
 will be added to this module.
 
 This module uses L<Log::Any>.
 
-This module's functions has L<Sub::Spec> specs.
-
-=head1 FUNCTIONS
-
-None are exported, but they are exportable.
-
-=head2 get_ga_ssuri(%args) -> [STATUS_CODE, ERR_MSG, RESULT]
-
-
-Create Sub::Spec::URI object to access GudangAPI.com API functions.
-
-Once a Sub::Spec::URI object is created, you can call function, get function
-spec, etc. See Sub::Spec::URI documentation for more details.
-
-Returns a 3-element arrayref. STATUS_CODE is 200 on success, or an error code
-between 3xx-5xx (just like in HTTP). ERR_MSG is a string containing error
-message, RESULT is the actual result.
-
-Arguments (C<*> denotes required arguments):
-
-=over 4
-
-=item * B<module>* => I<str>
-
-Name of module to call.
-
-=item * B<sub> => I<str>
-
-Name of function to call.
-
-=item * B<https> => I<bool> (default C<0>)
-
-Whether to use HTTPS instead of HTTP.
-
-You might want to use HTTPS if you send sensitive data such as password or
-financial data. Note that HTTPS access has higher latency.
-
-=item * B<user> => I<str> (default C<"ga">)
-
-GudangAPI username.
-
-=back
+This module has L<Rinci> metadata.
 
 =head1 SEE ALSO
 
-L<Sub::Spec::HTTP>
+L<Riap>
 
-L<Sub::Spec::URI>
+L<Perinci::Access>
 
 http://www.gudangapi.com/
 
@@ -178,7 +158,7 @@ Steven Haryanto <stevenharyanto@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Steven Haryanto.
+This software is copyright (c) 2012 by Steven Haryanto.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,74 +1,41 @@
 NAME
-    WWW::GudangAPI - Client library for GudangAPI.com
+    WWW::GudangAPI
 
 VERSION
-    version 0.03
+    version 0.04
 
 SYNOPSIS
-     use WWW::GudangAPI qw(get_ga_ssuri);
-     my $uri = get_ga_ssuri(
+     use WWW::GudangAPI qw(call_ga);
+     my $uri = call_ga(
          module => 'tax/id/npwp',
-         sub    => 'parse_npwp',
+         func   => 'parse_npwp',
          #https => 1, # use https, default is 0
+         args => {npwp=>'00.000.001.8-000'}
      );
      my $res = $uri->call(npwp=>'00.000.001.8-000');
      say "valid!" if $res->[0] == 200; # prints 'valid!'
 
 DESCRIPTION
     This module is the Perl client library for GudangAPI,
-    <http://www.gudangapi.com/>. It is currently a very thin wrapper for
-    Sub::Spec::URI, since GudangAPI is Sub::Spec::HTTP-compliant. As a
-    matter of fact, you can just do:
+    <http://www.gudangapi.com/>. It is currently a very thin (and probably
+    pretty useless) wrapper for Perinci::Access, since GudangAPI is
+    Riap-compliant. As a matter of fact, you can just do:
 
-     my $uri = Sub::Spec::URI->new("http://gudangapi.com/ga/MODULE::FUNC");
-     my $res = $uri->call(ARG=>..., ...);
+     my $pa = Perinci::Access->new;
+     my $res = $pa->request(call => "http://gudangapi.com/ga/MODULE::FUNC",
+                            {args=>{ARG=>...}});
 
     and skip this module altogether. But in the future some convenience
     features will be added to this module.
 
     This module uses Log::Any.
 
-    This module's functions has Sub::Spec specs.
-
-FUNCTIONS
-    None are exported, but they are exportable.
-
-  get_ga_ssuri(%args) -> [STATUS_CODE, ERR_MSG, RESULT]
-    Create Sub::Spec::URI object to access GudangAPI.com API functions.
-
-    Once a Sub::Spec::URI object is created, you can call function, get
-    function spec, etc. See Sub::Spec::URI documentation for more details.
-
-    Returns a 3-element arrayref. STATUS_CODE is 200 on success, or an error
-    code between 3xx-5xx (just like in HTTP). ERR_MSG is a string containing
-    error message, RESULT is the actual result.
-
-    Arguments ("*" denotes required arguments):
-
-    *   module* => *str*
-
-        Name of module to call.
-
-    *   sub => *str*
-
-        Name of function to call.
-
-    *   https => *bool* (default 0)
-
-        Whether to use HTTPS instead of HTTP.
-
-        You might want to use HTTPS if you send sensitive data such as
-        password or financial data. Note that HTTPS access has higher
-        latency.
-
-    *   user => *str* (default "ga")
-
-        GudangAPI username.
+    This module has Rinci metadata.
 
 SEE ALSO
-    Sub::Spec::HTTP
+    Riap
 
-    Sub::Spec::URI
+    Perinci::Access
 
     http://www.gudangapi.com/
 
@@ -76,7 +43,7 @@ AUTHOR
     Steven Haryanto <stevenharyanto@gmail.com>
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2011 by Steven Haryanto.
+    This software is copyright (c) 2012 by Steven Haryanto.
 
     This is free software; you can redistribute it and/or modify it under
     the same terms as the Perl 5 programming language system itself.
